@@ -32,6 +32,11 @@ consistent_hash::update_sorted_ring()
 void
 consistent_hash::add_node(std::string node_addr)
 {
+    if (members_.find(node_addr) != members_.end())
+    {
+        std::cout << "the input node: " << node_addr << " has already been set on the ring." << std::endl;
+    }
+
     const std::lock_guard<std::mutex> wlock(rw_mutex_);
 
     for (int i = 0; i < virtual_nodes_num_; ++i)
@@ -74,3 +79,22 @@ consistent_hash::find_node(std::string key)
 }
 
 
+void
+consistent_hash::remove_node(std::string node_addr)
+{
+    if (members_.find(node_addr) == members_.end())
+    {
+        std::cout << "the input node: " << node_addr << " does not exist on the ring." << std::endl;
+    }
+
+    const std::lock_guard<std::mutex> rlock(rw_mutex_);
+
+    for (int i = 0; i < virtual_nodes_num_; ++i)
+    {
+        // maybe should check the members_ existence here to avoid hash conflict.
+        circle_.erase(hash_method_(node_addr + "_" + std::to_string(i)));
+    }
+    nodes_num_--;
+    members_.erase(node_addr);
+    update_sorted_ring();
+}

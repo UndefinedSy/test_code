@@ -15,13 +15,15 @@ int main()
     c_h->add_node("10.25.70.189");
 
 
-    std::vector<std::string> test_keys {"audit_cee_1:12228", "audit_cee_2:12228", "audit_cee_3:12228", "avscan_cee_1:12228"};
+    std::vector<std::string> test_keys {"audit_cee_1:12228", "audit_cee_2:12228", "audit_cee_3:12228", "avscan_cee_1:12228", "avscan_cee_114:12228", "avscan_cee_514:12228"};
 
     for (const auto& key : test_keys)
     {
         std::cout << "current key is: " << key << " | the cache node is: " << c_h->find_node(key) << std::endl;
     }
 
+    std::cout << "----------------------------------\n";
+    std::cout << "Insert 3 new nodes(190~192)\n";
     std::cout << "----------------------------------\n";
 
     c_h->add_node("10.25.70.190");
@@ -32,4 +34,17 @@ int main()
     {
         std::cout << "current key is: " << key << " | the cache node is: " << c_h->find_node(key) << std::endl;
     }
+
+    std::cout << "----------------------------------\n";
+    std::cout << "Remove 1 node(188)\n";
+    std::cout << "----------------------------------\n";
+
+    c_h->remove_node("10.25.70.188");
+
+    for (const auto& key : test_keys)
+    {
+        std::cout << "current key is: " << key << " | the cache node is: " << c_h->find_node(key) << std::endl;
+    }
+
+    return 0;
 }
