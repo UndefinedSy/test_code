@@ -75,6 +75,15 @@ consistent_hash::find_node(std::string key)
     }
     int target_ring_index = search_node(hash_method_(key));
 
+    const std::string& target_node_addr = circle_[sorted_ring_[target_ring_index]];
+
+    if (members_.find(target_node_addr) != members_.end() && !members_[target_node_addr])
+    {
+        // this node has been failed, can add some failover logic here.
+        // like return an specific err code to tell requestor to use the backup ring.
+        // or just make the backup node in-place when detect a node fails.
+    }
+
     return circle_[sorted_ring_[target_ring_index]];
 }
 
