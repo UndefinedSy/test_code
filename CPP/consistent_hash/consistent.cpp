@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 #include "consistent.h"
 
@@ -32,12 +33,13 @@ consistent_hash::update_sorted_ring()
 void
 consistent_hash::add_node(std::string node_addr)
 {
+    const std::lock_guard<std::mutex> wlock(rw_mutex_);
+
     if (members_.find(node_addr) != members_.end())
     {
         std::cout << "the input node: " << node_addr << " has already been set on the ring." << std::endl;
+        return;
     }
-
-    const std::lock_guard<std::mutex> wlock(rw_mutex_);
 
     for (int i = 0; i < virtual_nodes_num_; ++i)
     {
@@ -69,9 +71,10 @@ consistent_hash::find_node(std::string key)
 {
     const std::lock_guard<std::mutex> rlock(rw_mutex_);
 
-    if (circle_.size() == 0)
+    if (nodes_num_ == 0)
     {
         std::cout << "hash_map has not been established" << std::endl;
+        return nullptr;
     }
     int target_ring_index = search_node(hash_method_(key));
 
@@ -94,6 +97,7 @@ consistent_hash::remove_node(std::string node_addr)
     if (members_.find(node_addr) == members_.end())
     {
         std::cout << "the input node: " << node_addr << " does not exist on the ring." << std::endl;
+        return;
     }
 
     const std::lock_guard<std::mutex> rlock(rw_mutex_);
@@ -106,4 +110,37 @@ consistent_hash::remove_node(std::string node_addr)
     nodes_num_--;
     members_.erase(node_addr);
     update_sorted_ring();
+}
+
+std::vector<std::string>
+consistent_hash::find_next_n_nodes(std::string key, int n)
+{
+    std::vector<std::string> result;
+
+    const std::lock_guard<std::mutex> rlock(rw_mutex_);
+
+    if (nodes_num_ < n)
+    {
+        std::cout << "do not have enough node" << std::endl;
+        return result;
+    }
+    int target_ring_index = search_node(hash_method_(key));
+    const std::string& target_node_addr = circle_[sorted_ring_[target_ring_index++]];
+
+    result.emplace_back(target_node_addr);
+
+    int ring_length = sorted_ring_.size();
+    for (int i = 1; i < n;)
+    {
+        const std::string& next_entry = circle_[sorted_ring_[target_ring_index++]];
+        if (find(result.begin(), result.end(), next_entry) == result.end())
+        {
+            result.emplace_back(next_entry);
+            ++i;
+        }
+        if (target_ring_index >= ring_length)
+            target_ring_index = 0;
+    }
+
+    return result;
 }

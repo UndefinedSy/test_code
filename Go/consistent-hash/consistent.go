@@ -289,6 +289,8 @@ func ExampleNew() {
 	c.Add("cacheA")
 	c.Add("cacheB")
 	c.Add("cacheC")
+	c.Add("cacheD")
+	c.Add("cacheE")
 	users := []string{"user_mcnulty", "user_bunk", "user_omar", "user_bunny", "user_stringer"}
 	for _, u := range users {
 		server, err := c.Get(u)
@@ -303,6 +305,13 @@ func ExampleNew() {
 	// user_omar => cacheA
 	// user_bunny => cacheC
 	// user_stringer => cacheC
+	members, err := c.GetN("user_mcnulty", 3)
+	if err != nil {
+		fmt.Printf("err: %s\n", err)
+	}
+	for i, j := range members {
+		fmt.Printf("%s => %s\n", i, j)
+	}
 }
 
 func main() {

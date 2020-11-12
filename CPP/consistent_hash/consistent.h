@@ -36,6 +36,7 @@ public:
     void remove_node(std::string node_addr);
     // find which server can handle a request with key
     std::string find_node(std::string key);
+    std::vector<std::string> find_next_n_nodes(std::string key, int n);
 };
 
 #endif

@@ -46,5 +46,15 @@ int main()
         std::cout << "current key is: " << key << " | the cache node is: " << c_h->find_node(key) << std::endl;
     }
 
+    std::cout << "----------------------------------\n";
+    std::cout << "get 3 nodes(key: audit_cee_1:12228)\n";
+    std::cout << "----------------------------------\n";
+
+    auto next_3_nodes = c_h->find_next_n_nodes("audit_cee_1:12228", 3);
+    for (const auto& node : next_3_nodes)
+    {
+        std::cout << node << std::endl;
+    }
+
     return 0;
 }
