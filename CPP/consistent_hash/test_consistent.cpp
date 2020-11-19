@@ -3,7 +3,7 @@
 
 #include "consistent.h"
 
-int main()
+void test_consistent()
 {
     std::hash<std::string> std_hash;
     auto c_h = std::make_unique<consistent_hash>(
@@ -55,6 +55,11 @@ int main()
     {
         std::cout << node << std::endl;
     }
+}
+
+int main()
+{
+    test_consistent();
 
     return 0;
 }
