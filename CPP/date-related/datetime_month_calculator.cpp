@@ -4,17 +4,8 @@
 #include <regex>
 #include <string>
 
-/**
- * Check whether the input date is valid.
- * @param Date Target Datetime string to verify.
- * @return true if the format is valid. 
- */
-static bool
-IsDateValid(const std::string& Date)
-{
-    std::regex DateRegex("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}");
-    return std::regex_match(Date, DateRegex);
-}
+
+const int DayCounts[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 /**
  * Check if the input year is a leap year.
@@ -31,6 +22,38 @@ IsLeapYear(int Year)
 	return false;
 }
 
+
+/**
+ * Check whether the input date is valid.
+ * @param Date Target Datetime string to verify.
+ * @return true if the format is valid. 
+ */
+static bool
+IsDateValid(const std::string& Date,
+            int& Year, int& Month, int& Day)
+{
+    std::regex DateRegex("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}");
+    if (!std::regex_match(Date, DateRegex))
+        return false;
+
+    sscanf(Date.c_str(), "%d-%d-%d", &Year, &Month, &Day);
+    if (Month > 12 || Month == 0 || Day == 0)
+        return false;
+
+    int MaxDayCountInCurrentMonth;
+    if (Month == 2 && IsLeapYear(Year))
+        MaxDayCountInCurrentMonth = 29;
+    else
+        MaxDayCountInCurrentMonth = DayCounts[Month];
+    
+    if (Day > MaxDayCountInCurrentMonth)
+        return false;
+
+    return true;
+
+}
+
+
 /**
  * Get the day count after the change of the month.
  * * Will not change `Day` if it is less than the DayCount in target month. (e.g. 2021-02-15 ==> 2021-03-15)
@@ -43,8 +66,6 @@ IsLeapYear(int Year)
 static int
 GetDay(int Year, int Month, int Day)
 {
-    static int DayCounts[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
     if (Day < DayCounts[Month])
         return Day;
 
@@ -52,6 +73,7 @@ GetDay(int Year, int Month, int Day)
         return 29;
     return DayCounts[Month];
 }
+
 
 /**
  * Calculate the Datetime after an offset of month.
@@ -74,14 +96,12 @@ CalcDateWithMonthOffset(const std::string& DateBase, int MonthOffset,
         return false;
     }
 
-    if (!IsDateValid(DateBase))
+    int Year, Month, Day;
+    if (!IsDateValid(DateBase, Year, Month, Day))
     {
-        Result = "The param `DateBase` should be formatted as \"YYYY-MM-DD\".";
+        Result = "The param `DateBase` should be formatted as \"YYYY-MM-DD\" And it should be a valid datetime.";
         return false;
     }
-
-    int Year, Month, Day;
-    sscanf(DateBase.c_str(), "%d-%d-%d", &Year, &Month, &Day);
 
     Month += MonthOffset;
     if (Month > 12)
@@ -124,6 +144,18 @@ int main()
 
     printf("Input Param: {DateBase: %s, MonthOffset: %d}", "2019-12-31", 26);
     assert(CalcDateWithMonthOffset("2019-12-31", 26, Result));
+    printf(" Return: %s\n", Result.c_str());
+
+    printf("Input Param: {DateBase: %s, MonthOffset: %d}", "2019-00-31", 1);
+    assert(!CalcDateWithMonthOffset("2019-00-31", 1, Result));
+    printf(" Return: %s\n", Result.c_str());
+
+    printf("Input Param: {DateBase: %s, MonthOffset: %d}", "2019-01-00", 1);
+    assert(!CalcDateWithMonthOffset("2019-01-00", 1, Result));
+    printf(" Return: %s\n", Result.c_str());
+
+    printf("Input Param: {DateBase: %s, MonthOffset: %d}", "2019-02-31", 1);
+    assert(!CalcDateWithMonthOffset("2019-02-31", 1, Result));
     printf(" Return: %s\n", Result.c_str());
 
     printf("Input Param: {DateBase: %s, MonthOffset: %d}", "d2019-4-15", 1);
