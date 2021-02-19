@@ -26,7 +26,11 @@ IsLeapYear(int Year)
 /**
  * Check whether the input date is valid.
  * @param Date Target Datetime string to verify.
- * @return true if the format is valid. 
+ * @return false if the format is valid.
+ *  * scenario 1: The format does not conform to YYYY-MM-DD
+ *  * scenario 2: Month > 12 or Month == 0
+ *  * scenario 3: Day == 0
+ *  * scenario 4: Day exceeds the maximum count of days in the current month
  */
 static bool
 IsDateValid(const std::string& Date,
