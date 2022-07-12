@@ -18,10 +18,8 @@ public:
         : total_size_(size)
         , hash_func_(std::hash<KeyType>())
     {
-        if (size % 8)
-            throw std::runtime_error("size must be multiple of 8");
-        occupied_.resize(size/8);
-        readable_.resize(size/8);
+        occupied_.resize((size - 1) / 8 + 1);
+        readable_.resize((size - 1) / 8 + 1);
         data_.resize(size);
     }
     FixSizeHashMap() = delete;
@@ -33,14 +31,38 @@ public:
     }
 
 public:
-    void get_all(std::vector<ValueType>& result)
+    void get_all_key(std::vector<KeyType*>& keys)
+    {
+        keys.clear();
+        for (int i = 0; i < total_size_; ++i)
+        {
+            if (is_readable(i))
+            {
+                keys.push_back(&data_[i].first);
+            }
+        }
+    }
+
+    void get_all_val(std::vector<ValueType*>& result)
     {
         result.clear();
         for (int i = 0; i < total_size_; ++i)
         {
             if (is_readable(i))
             {
-                result.push_back(data_[i].second);
+                result.push_back(&data_[i].second);
+            }
+        }
+    }
+
+    void get_all_data(std::vector<std::pair<KeyType*, ValueType*>>& result)
+    {
+        result.clear();
+        for (int i = 0; i < total_size_; ++i)
+        {
+            if (is_readable(i))
+            {
+                result.emplace_back(&data_[i].first, &data_[i].second);
             }
         }
     }
@@ -82,6 +104,17 @@ public:
         value = data_[index].second;
         return true;
     }
+
+    bool getp(KeyType key, KeyComparator cmp, ValueType** value)
+    {
+        int index;
+        if (!probe_get(key, cmp, index))
+        {
+            return false;
+        }
+        *value = &data_[index].second;
+        return true;
+    } 
 
 private:
     bool is_occupied(uint32_t index) const
@@ -189,7 +222,7 @@ private:
     }
 
 private:
-    int total_size_;
+    uint32_t total_size_;
     std::hash<KeyType> hash_func_;
     std::vector<uint32_t> occupied_;
     std::vector<uint32_t> readable_;
